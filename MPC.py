@@ -16,12 +16,12 @@ noise   = np.random.normal(0, 0.1, N)
 # perturbação
 STEPS_Q = [1, 0, 1, 0, 1, 0, -1, 0, -1, 0, 2, 0]
 STEPS_T = [10, 11, 20, 21, 30, 31, 40, 41, 50, 51, 60, 61]
-q = step_generator(LEN_STEP, STEPS_T, STEPS_Q)
+q       = step_generator(LEN_STEP, STEPS_T, STEPS_Q)
 
 # referência
 STEPS_W = [3, -2, 1, -4, 5]
 STEPS_T = [15, 30, 45, 60, 75]
-w = step_generator(LEN_STEP, STEPS_T, STEPS_W)
+w       = step_generator(LEN_STEP, STEPS_T, STEPS_W)
 
 # varivais para animar o sistema
 u_hist  = []
@@ -51,5 +51,6 @@ for k in range(N):
     u_hist.append(delta_u)
     y_hat.append(y_future + free_foward)
     
+print("complete!")
 y = calculate_response(LEN_STEP, alpha, u, q) + y0
 animate_system(k_arr, y, u, q, w, N, u_hist, y_hat)

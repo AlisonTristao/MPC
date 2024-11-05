@@ -9,11 +9,9 @@ def animate_system(k, y, u, q, w, N, u_hist, y_hat):
 
         ax1.clear()
         ax2.clear()
-        #ax3.clear()
 
-        ax1.axvline(x=frame, color='yellow', linestyle='--')
-        ax2.axvline(x=frame, color='yellow', linestyle='--')
-        #ax3.axvline(x=frame, color='yellow', linestyle='--')
+        ax1.axvline(x=frame, color='gray', linestyle='--')
+        ax2.axvline(x=frame, color='gray', linestyle='--')
 
         # Gráfico 1: (y) e (w) com previsão (f_hist) após o frame atual
         ax1.step(k[:frame], y[:frame], where="post", color="blue", label="y(k)")
@@ -28,9 +26,9 @@ def animate_system(k, y, u, q, w, N, u_hist, y_hat):
         ax1.set_title("y(k) e w(k)")
 
         # Gráfico 2: (q) e (u) com previsão (u_hist) após o frame atual
-        ax2.step(k[:frame], q[:frame], where="post", color="green", label="Δq(k)")
+        ax2.step(k[:frame], q[:frame], where="post", color="orange", label="Δq(k)")
         ax2.step(k[:frame], u[:frame], where="post", color="purple", label="Δu(k)")
-        ax2.step(k[frame:frame+len(u_h)], u_h, where="post", color="orange", linestyle="--", label="futuro Δu(k)")    
+        ax2.step(k[frame:frame+len(u_h)], u_h, where="post", color="green", linestyle="--", label="Δû(k)")    
     
         ax2.set_ylabel("entradas")
         ax2.set_xlim(0, N)
@@ -38,15 +36,6 @@ def animate_system(k, y, u, q, w, N, u_hist, y_hat):
         ax2.grid(True)
         ax2.legend()
         ax2.set_title("Δq(k) e Δu(k)")
-
-        # Gráfico 3: erro (y - w)
-        '''ax3.step(k[:frame], y[:frame] - w[:frame], where="post", color="black", label="erro")
-        ax3.set_ylabel("erro")
-        ax3.set_xlim(0, N)
-        ax3.set_ylim(min(y-w)-1, max(y-w)+1)
-        ax3.grid(True)
-        ax3.legend()
-        ax3.set_title("erro")'''
         
         return ax1, ax2
 

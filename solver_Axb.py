@@ -1,8 +1,3 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.animation import FuncAnimation
-
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as np
@@ -60,7 +55,27 @@ def animate_system(k, y, u, q, w, N, u_hist, y_hat):
     ani = FuncAnimation(fig, update, frames=N+1, repeat=False, interval=0)  # Ajuste feito em frames para N+1
     plt.show()
 
+def step_generator(future, time, heigh):
+    ref = np.zeros(future)
 
+    if len(heigh) != len(time):
+        return None
+
+    for i in range(future):
+        for j in range(len(time)):
+            if time[j] <= i:
+                ref[i] = heigh[j]
+
+    return ref
+
+def arr_complete(arr, N):
+    # se nao for um array numpy transforma em um
+    if type(arr) != np.ndarray:
+        arr = np.array(arr)
+
+    for _ in range(N - arr.shape[0]):
+        arr = np.insert(arr, 0, 0)
+    return arr
 
 def resp_degrau(alpha, k):
     return (1 - alpha**k)
@@ -76,12 +91,9 @@ def matrix_G(N, alpha=0.8):
     return G
 
 def calculate_response(N, alpha=0.8, u=[], q=[]):
-    # --- se não houver valores de u
-    for _ in range(N - u.shape[0]):
-        u = np.insert(u, 0, 0)
-
-    for _ in range(N - q.shape[0]):
-        q = np.insert(q, 0, 0)
+    # se não houver valores de u
+    u = arr_complete(u, N)
+    q = arr_complete(q, N)
 
     # --- matriz de convolução ---
     G = matrix_G(N, alpha)
@@ -116,9 +128,7 @@ def calc_free_foward(y_t, alpha, u_past, window):
     g = [resp_degrau(alpha, i) for i in range(N_ss + 1)]
 
     # completa os valores de u passados com zero
-    len = u_past.shape[0]
-    for _ in range(N_ss - len):
-        u_past = np.insert(u_past, 0, 0)
+    u_past = arr_complete(u_past, N_ss)
 
     # faz a predicao para toda a janela
     for j in range(window):

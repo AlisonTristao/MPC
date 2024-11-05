@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.animation import FuncAnimation
 
-def animate_system(k, y, q, u, w, N, t):
+def animate_system(k, y, u, q, w, N, t):
     def update(frame):
         ax1.clear()
         ax2.clear()
@@ -13,7 +13,6 @@ def animate_system(k, y, q, u, w, N, t):
         ax2.axvline(x=t, color='yellow', linestyle='--')
         ax3.axvline(x=t, color='yellow', linestyle='--')
 
-        
         # (y) e (w) no mesmo gráfico
         ax1.step(k[:frame], y[:frame], where="post", color="blue", label="y(k)")
         ax1.step(k[:frame], w[:frame], where="post", color="red", linestyle="--", label="w(k)")
@@ -43,60 +42,85 @@ def animate_system(k, y, q, u, w, N, t):
         ax3.legend()
         ax3.set_title("erro")
         
-        return ax1, ax2
+        return ax1, ax2, ax3
 
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 10))
     fig.tight_layout(pad=3.0)
     ani = FuncAnimation(fig, update, frames=N+1, repeat=False, interval=0)  # Ajuste feito em frames para N+1
     plt.show()
 
-def matrix_A(N, alpha=0.8):
+def resp_degrau(alpha, k):
+    return (1 - alpha**k)
+
+def matrix_G(N, alpha=0.8):
     # --- matriz de convolução ---
-    A = np.zeros((N, N))
+    G = np.zeros((N, N))
     for i in range(N):
         for j in range(N):
             if j <= i:
-                A[i][j] = 1 - alpha**(i-j + 1)
+                G[i][j] = resp_degrau(alpha, i-j + 1)
 
-    return A
+    return G
 
-def calculate_response(N, alpha=0.8, y0=0, u=[], q=[]):
-    y = np.zeros(N)
-    u = np.zeros(N) if len(u) == 0 else u
-    q = np.zeros(N) if len(q) == 0 else q
+def calculate_response(N, alpha=0.8, u=[], q=[]):
+    # --- se não houver valores de u
+    for _ in range(N - u.shape[0]):
+        u = np.insert(u, 0, 0)
+
+    for _ in range(N - q.shape[0]):
+        q = np.insert(q, 0, 0)
 
     # --- matriz de convolução ---
-    A = matrix_A(N)
+    G = matrix_G(N, alpha)
 
-    # --- resposta ao degrau (perturbacao) ---
-    y = np.dot(A, u) + np.dot(A, q)
-
-    # --- condição inicial ---
-    for i in range(N):
-        y[i] += y0 * alpha**i
+    # --- resposta ao degrau + perturbacao ---
+    y = np.dot(G, u) + np.dot(G, q)
 
     return y
 
 def solver(alpha, free_foward, w, LAMBDA=0.1):
-    G = matrix_A(len(free_foward), alpha)
+    # --- solver ---
+    G   = matrix_G(len(free_foward), alpha)
     Gt  = np.transpose(G)
-    I = np.identity(G.shape[0])
+    I   = np.identity(G.shape[0])
     
-    A = np.dot(Gt, G) + LAMBDA*I
-    b = np.dot(Gt, w - free_foward)
+    # --- monta o sistema ---
+    A   = np.dot(Gt, G) + LAMBDA*I
+    b   = np.dot(Gt, w - free_foward)
     
+    # --- resolve o sistema ---
     delta_u = np.linalg.solve(A, b)
     
     return delta_u
 
-'''def free_foward(y_t, alpha, delta_u, f_arr, k, N_ss):
-    g = [1 - alpha**i for i in range(1000)]    
-    diff = [g[i + k] - g[i] for i in range(N_ss)]
+def calc_free_foward(y_t, alpha, u_past, window):
+    free_foward = np.zeros(window)
 
-    sum = 0
-    for M in range(N_ss):
-        sum += diff[M] * delta_u[M]
+    # valores em q gi tende a zero
+    N_ss = int(np.log(1e-3) / np.log(alpha)) + 1
+
+    # valores de g
+    g = [resp_degrau(alpha, i) for i in range(N_ss + 1)]
+
+    # completa os valores de u passados com zero
+    len = u_past.shape[0]
+    for _ in range(N_ss - len):
+        u_past = np.insert(u_past, 0, 0)
+
+    # faz a predicao para toda a janela
+    for j in range(window):
+        # diferença entre os valores de g
+        diff = np.zeros(N_ss) 
+        for i in range(N_ss):
+            if j+i < N_ss:
+                diff[i] = g[j+i] - g[i]
+
+        # soma de todas as diferenças multiplicadas pelos valores passados
+        sum = 0
+        for i in range(N_ss):
+            sum += diff[i] * u_past[N_ss -i -1]
         
-    f_arr[k] = sum + y_t
+        # calcula o valor predito
+        free_foward[j] = sum + y_t
 
-    return f_arr'''
+    return free_foward

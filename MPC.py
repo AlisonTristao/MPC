@@ -2,58 +2,65 @@ import numpy as np
 import math as m
 from solver_Axb import *
 
-def gerar_referencias_degrau(N, amplitudes, inicios):
-    referencia = np.zeros(N)
 
-    if len(amplitudes) != len(inicios):
-        raise Exception("amplitudes e inicios devem ter o mesmo tamanho")
+def step_generator(future, time, heigh):
+    ref = np.zeros(future)
 
-    for i in range(N):
-        for j in range(len(inicios)):
-            if inicios[j] <= i:
-                referencia[i] = amplitudes[j]
+    if len(heigh) != len(time):
+        return None
 
-    return referencia
+    for i in range(future):
+        for j in range(len(time)):
+            if time[j] <= i:
+                ref[i] = heigh[j]
 
-# constantes
-alpha   = 0.8
-y0      = 5
-WINDOW  = (int(m.log(1e-3) / m.log(alpha)))
-N       = 100
+    return ref
+
+# Parâmetros do sistema
+alpha       = 0.8           # constante de tempo
+y0          = 2             # condição inicial
+WINDOW      = 20            # janela de previsao
+N           = 100           # tempo de simulação
+LEN_STEP    = N + WINDOW    # número de passos
 
 # arrays de dados
-k       = [i for i in range(N)]
-q       = np.zeros(N)
-u       = q.copy()
-w       = np.concatenate((np.ones(int(N/2)), np.ones(int(N/2))*4))
+k_arr   = [i for i in range(LEN_STEP)]
+u       = np.zeros(LEN_STEP)
+q       = u.copy()
+#w       = u.copy()
 
-# Arrays de dados
-k = [i for i in range(N)]
-q = np.zeros(N)
-u = q.copy()
-N = 100
-w = gerar_referencias_degrau(N, [1, 2, -3, 4], [10.0, 30, 40, 60])
+# perturbação
+STEPS_Q = [1, 0, 1, 0, 1, 0]
+STEPS_T = [10, 11, 20, 21, 30, 31]
+q = step_generator(LEN_STEP, STEPS_T, STEPS_Q)
 
-# Resposta ao degrau
-for t in range(N-WINDOW):
-    # controles passados e atuais
-    current_u = u[:t+WINDOW].copy()
-    current_q =  q[:t+WINDOW].copy()
+# referência
+STEPS_W = [3, -2, 1, -4, 5]
+STEPS_T = [15, 30, 45, 60, 75]
+w = step_generator(LEN_STEP, STEPS_T, STEPS_W)
 
-    # calcula a resposta futura de acordo com controles passados
-    free_foward = calculate_response(WINDOW+t, alpha, y0, current_u, current_q)
+last_y0 = y0
+for k in range(1, N):
+    # calcula a saída do sistema
+    y = calculate_response(N+1, alpha, u, q) + y0
 
-    # corta do segundo item em diante
-    free_foward = free_foward[t:t+WINDOW]
+    # atualiza a saída do sistema
+    last_y0 = y[k]
 
-    # resove o sistema
-    delta_u = solver(alpha, free_foward, w[t:t+len(free_foward)], LAMBDA=0.7)
+    # define o tempo passado com limite de janela de previsão
+    past_time = 0 if k <= WINDOW else k - WINDOW
 
-    y = calculate_response(len(free_foward), alpha, free_foward[0], delta_u, q[t:t+len(free_foward)])
+    # define o vetor de controle passado
+    past_u = u[past_time:k].copy()
 
-    # atualiza os controles
-    u[t] = delta_u[0]
+    # free response (ele completa os valores passado de u com zero)
+    free_foward = calc_free_foward(last_y0, alpha, past_u, WINDOW)
 
-print("pronto")
-y = calculate_response(N-WINDOW, alpha, y0, u[:N-WINDOW], current_q[:N-WINDOW])
-animate_system(k[:N-WINDOW], y, q[:N-WINDOW], u[:N-WINDOW], w[:N-WINDOW], N-WINDOW, t)
+    # calcula a ação de controle com base na predicao
+    delta_u = solver(alpha, free_foward, w[k:k+WINDOW])
+    
+    # atualiza ação de controle
+    u[k] = delta_u[0] # if abs(delta_u[0]) <= 1 else delta_u[0]/abs(delta_u[0])
+
+y = calculate_response(LEN_STEP, alpha, u, q) + y0
+animate_system(k_arr, y, u, q, w, N, 0)

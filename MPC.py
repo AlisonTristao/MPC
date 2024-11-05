@@ -2,7 +2,6 @@ import numpy as np
 import math as m
 from solver_Axb import *
 
-
 def step_generator(future, time, heigh):
     ref = np.zeros(future)
 
@@ -19,15 +18,14 @@ def step_generator(future, time, heigh):
 # Parâmetros do sistema
 alpha       = 0.8           # constante de tempo
 y0          = 2             # condição inicial
-WINDOW      = 20            # janela de previsao
+WINDOW      = 30            # janela de previsao
 N           = 100           # tempo de simulação
 LEN_STEP    = N + WINDOW    # número de passos
 
 # arrays de dados
 k_arr   = [i for i in range(LEN_STEP)]
 u       = np.zeros(LEN_STEP)
-q       = u.copy()
-#w       = u.copy()
+noise   = np.random.normal(0, 0.1, N+1)
 
 # perturbação
 STEPS_Q = [1, 0, 1, 0, 1, 0, -1, 0, -1, 0, 2, 0]
@@ -41,16 +39,11 @@ w = step_generator(LEN_STEP, STEPS_T, STEPS_W)
 
 # varivais para animar o sistema
 u_hist  = []
-f_hist  = []
 y_hat   = []
 
-last_y0 = y0
 for k in range(1, N):
     # calcula a saída do sistema
-    y = calculate_response(N+1, alpha, u, q) + y0
-
-    # atualiza a saída do sistema
-    last_y0 = y[k]
+    y = calculate_response(N+1, alpha, u, q) + y0 + noise
 
     # define o tempo passado com limite de janela de previsão
     past_time = 0 if k <= WINDOW else k - WINDOW
@@ -59,19 +52,18 @@ for k in range(1, N):
     past_u = u[past_time:k].copy()
 
     # free response (ele completa os valores passado de u com zero)
-    free_foward = calc_free_foward(last_y0, alpha, past_u, WINDOW)
+    free_foward = calc_free_foward(y[k], alpha, past_u, WINDOW)
 
     # calcula a ação de controle com base na predicao
     delta_u = solver(alpha, free_foward, w[k:k+WINDOW])
 
     # salva a predição para plotar
-    y_future = calculate_response(WINDOW, alpha, delta_u, q[k:k+WINDOW]) + last_y0
-    u_hist.append(delta_u.copy())
-    y_hat.append(y_future)
-    f_hist.append(free_foward.copy())
+    y_future = calculate_response(WINDOW, alpha, delta_u, np.zeros(WINDOW))
+    u_hist.append(delta_u)
+    y_hat.append(y_future + free_foward)
     
     # atualiza ação de controle
     u[k] = delta_u[0] # if abs(delta_u[0]) <= 1 else delta_u[0]/abs(delta_u[0])
 
 y = calculate_response(LEN_STEP, alpha, u, q) + y0
-animate_system(k_arr, y, u, q, w, N, u_hist, f_hist, y_hat)
+animate_system(k_arr, y, u, q, w, N, u_hist, y_hat)

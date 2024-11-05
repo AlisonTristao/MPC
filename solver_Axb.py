@@ -7,10 +7,9 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as np
 
-def animate_system(k, y, u, q, w, N, u_hist, f_hist, y_hat):
+def animate_system(k, y, u, q, w, N, u_hist, y_hat):
     def update(frame):
         u_h = u_hist[frame] if frame < len(u_hist) else []
-        f_h = f_hist[frame] if frame < len(f_hist) else []
         y_h = y_hat[frame] if frame < len(y_hat) else []
 
         ax1.clear()
@@ -24,7 +23,6 @@ def animate_system(k, y, u, q, w, N, u_hist, f_hist, y_hat):
         # Gráfico 1: (y) e (w) com previsão (f_hist) após o frame atual
         ax1.step(k[:frame], y[:frame], where="post", color="blue", label="y(k)")
         ax1.step(k, w, where="post", color="red", linestyle="--", label="w(k)")
-        ax1.step(k[frame:frame+len(f_h)], f_h, where="post", color="orange", linestyle="--", label="free foward(k)")
         ax1.step(k[frame:frame+len(y_h)], y_h, where="post", color="green", linestyle="--", label="ŷ(k)")
 
         ax1.set_ylabel("ŷ e referência")
@@ -37,7 +35,7 @@ def animate_system(k, y, u, q, w, N, u_hist, f_hist, y_hat):
         # Gráfico 2: (q) e (u) com previsão (u_hist) após o frame atual
         ax2.step(k[:frame], q[:frame], where="post", color="green", label="Δq(k)")
         ax2.step(k[:frame], u[:frame], where="post", color="purple", label="Δu(k)")
-        ax2.step(k[frame:frame+len(f_h)], u_h, where="post", color="orange", linestyle="--", label="futuro Δu(k)")    
+        ax2.step(k[frame:frame+len(u_h)], u_h, where="post", color="orange", linestyle="--", label="futuro Δu(k)")    
     
         ax2.set_ylabel("entradas")
         ax2.set_xlim(0, N)

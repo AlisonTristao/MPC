@@ -30,14 +30,19 @@ q       = u.copy()
 #w       = u.copy()
 
 # perturbação
-STEPS_Q = [1, 0, 1, 0, 1, 0]
-STEPS_T = [10, 11, 20, 21, 30, 31]
+STEPS_Q = [1, 0, 1, 0, 1, 0, -1, 0, -1, 0, 2, 0]
+STEPS_T = [10, 11, 20, 21, 30, 31, 40, 41, 50, 51, 60, 61]
 q = step_generator(LEN_STEP, STEPS_T, STEPS_Q)
 
 # referência
 STEPS_W = [3, -2, 1, -4, 5]
 STEPS_T = [15, 30, 45, 60, 75]
 w = step_generator(LEN_STEP, STEPS_T, STEPS_W)
+
+# varivais para animar o sistema
+u_hist  = []
+f_hist  = []
+y_hat   = []
 
 last_y0 = y0
 for k in range(1, N):
@@ -58,9 +63,15 @@ for k in range(1, N):
 
     # calcula a ação de controle com base na predicao
     delta_u = solver(alpha, free_foward, w[k:k+WINDOW])
+
+    # salva a predição para plotar
+    y_future = calculate_response(WINDOW, alpha, delta_u, q[k:k+WINDOW]) + last_y0
+    u_hist.append(delta_u.copy())
+    y_hat.append(y_future)
+    f_hist.append(free_foward.copy())
     
     # atualiza ação de controle
     u[k] = delta_u[0] # if abs(delta_u[0]) <= 1 else delta_u[0]/abs(delta_u[0])
 
 y = calculate_response(LEN_STEP, alpha, u, q) + y0
-animate_system(k_arr, y, u, q, w, N, 0)
+animate_system(k_arr, y, u, q, w, N, u_hist, f_hist, y_hat)

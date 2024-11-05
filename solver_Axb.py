@@ -3,29 +3,42 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.animation import FuncAnimation
 
-def animate_system(k, y, u, q, w, N, t):
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+import numpy as np
+
+def animate_system(k, y, u, q, w, N, u_hist, f_hist, y_hat):
     def update(frame):
+        u_h = u_hist[frame] if frame < len(u_hist) else []
+        f_h = f_hist[frame] if frame < len(f_hist) else []
+        y_h = y_hat[frame] if frame < len(y_hat) else []
+
         ax1.clear()
         ax2.clear()
-        ax3.clear()
+        #ax3.clear()
 
-        ax1.axvline(x=t, color='yellow', linestyle='--')
-        ax2.axvline(x=t, color='yellow', linestyle='--')
-        ax3.axvline(x=t, color='yellow', linestyle='--')
+        ax1.axvline(x=frame, color='yellow', linestyle='--')
+        ax2.axvline(x=frame, color='yellow', linestyle='--')
+        #ax3.axvline(x=frame, color='yellow', linestyle='--')
 
-        # (y) e (w) no mesmo gráfico
+        # Gráfico 1: (y) e (w) com previsão (f_hist) após o frame atual
         ax1.step(k[:frame], y[:frame], where="post", color="blue", label="y(k)")
-        ax1.step(k[:frame], w[:frame], where="post", color="red", linestyle="--", label="w(k)")
+        ax1.step(k, w, where="post", color="red", linestyle="--", label="w(k)")
+        ax1.step(k[frame:frame+len(f_h)], f_h, where="post", color="orange", linestyle="--", label="free foward(k)")
+        ax1.step(k[frame:frame+len(y_h)], y_h, where="post", color="green", linestyle="--", label="ŷ(k)")
+
         ax1.set_ylabel("ŷ e referência")
         ax1.set_xlim(0, N)
         ax1.set_ylim(min(min(y), min(w))-1, max(max(y), max(w))+1)
         ax1.grid(True)
         ax1.legend()
         ax1.set_title("y(k) e w(k)")
-        
-        # (q) e (u) no mesmo gráfico
+
+        # Gráfico 2: (q) e (u) com previsão (u_hist) após o frame atual
         ax2.step(k[:frame], q[:frame], where="post", color="green", label="Δq(k)")
         ax2.step(k[:frame], u[:frame], where="post", color="purple", label="Δu(k)")
+        ax2.step(k[frame:frame+len(f_h)], u_h, where="post", color="orange", linestyle="--", label="futuro Δu(k)")    
+    
         ax2.set_ylabel("entradas")
         ax2.set_xlim(0, N)
         ax2.set_ylim(min(min(q), min(u))-1, max(max(q), max(u))+1)
@@ -33,21 +46,23 @@ def animate_system(k, y, u, q, w, N, t):
         ax2.legend()
         ax2.set_title("Δq(k) e Δu(k)")
 
-        # erro (y - w)
-        ax3.step(k[:frame], y[:frame] - w[:frame], where="post", color="black", label="erro")
+        # Gráfico 3: erro (y - w)
+        '''ax3.step(k[:frame], y[:frame] - w[:frame], where="post", color="black", label="erro")
         ax3.set_ylabel("erro")
         ax3.set_xlim(0, N)
         ax3.set_ylim(min(y-w)-1, max(y-w)+1)
         ax3.grid(True)
         ax3.legend()
-        ax3.set_title("erro")
+        ax3.set_title("erro")'''
         
-        return ax1, ax2, ax3
+        return ax1, ax2
 
-    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 10))
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6))
     fig.tight_layout(pad=3.0)
     ani = FuncAnimation(fig, update, frames=N+1, repeat=False, interval=0)  # Ajuste feito em frames para N+1
     plt.show()
+
+
 
 def resp_degrau(alpha, k):
     return (1 - alpha**k)
@@ -74,7 +89,7 @@ def calculate_response(N, alpha=0.8, u=[], q=[]):
     G = matrix_G(N, alpha)
 
     # --- resposta ao degrau + perturbacao ---
-    y = np.dot(G, u) + np.dot(G, q)
+    y = np.dot(G, u[:N]) + np.dot(G, q[:N])
 
     return y
 

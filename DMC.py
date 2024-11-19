@@ -3,15 +3,16 @@ from solver_Axb import *
 
 # Parâmetros do sistema
 alpha       = 0.8           # constante de tempo
-y0          = 2             # condição inicial
+y0          = 0             # condição inicial
 WINDOW      = 30            # janela de previsao
 N           = 100           # tempo de simulação
 LEN_STEP    = N + WINDOW    # número de passos
 
+
 # arrays de dados
 k_arr   = [i for i in range(LEN_STEP)]
 u       = np.zeros(LEN_STEP)
-noise   = np.random.normal(0, 0.1, N)
+noise   = np.zeros(N)#np.random.normal(0, 0.0, N)
 
 # perturbação
 STEPS_Q = [1, 0, 1, 0, 1, 0, -1, 0, -1, 0, 2, 0]
@@ -19,8 +20,8 @@ STEPS_T = [10, 11, 20, 21, 30, 31, 40, 41, 50, 51, 60, 61]
 q       = step_generator(LEN_STEP, STEPS_T, STEPS_Q)
 
 # referência
-STEPS_W = [3, -2, 1, -4, 5]
-STEPS_T = [15, 30, 45, 60, 75]
+STEPS_W = [1, 3, -2, 1, -4, 5]
+STEPS_T = [0, 15, 30, 45, 60, 75]
 w       = step_generator(LEN_STEP, STEPS_T, STEPS_W)
 
 # varivais para animar o sistema
@@ -41,7 +42,7 @@ for k in range(N):
     free_foward = calc_free_foward(y[k], alpha, past_u, WINDOW)
 
     # calcula a ação de controle com base na predicao
-    delta_u = solver(alpha, free_foward, w[k:k+WINDOW])
+    delta_u = solver(alpha, free_foward, w[k:k+WINDOW], LAMBDA=0.1)
 
     # atualiza ação de controle
     u[k] = delta_u[0]
@@ -52,5 +53,6 @@ for k in range(N):
     y_hat.append(y_future + free_foward)
     
 print("complete!")
-y = calculate_response(LEN_STEP, alpha, u, q) + y0
+y =np.concat(([0], calculate_response(LEN_STEP, alpha, u, q) + y0))
+q = np.concatenate(([0], q))
 animate_system(k_arr, y, u, q, w, N, u_hist, y_hat)

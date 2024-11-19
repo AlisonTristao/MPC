@@ -114,7 +114,7 @@ def calc_free_foward(y_t, alpha, u_past, window):
     N_ss = int(np.log(1e-3) / np.log(alpha)) + 1
 
     # valores de g
-    g = [resp_degrau(alpha, i) for i in range(N_ss + 1)]
+    g = [resp_degrau(alpha, i) for i in range(N_ss + window)]
 
     # completa os valores de u passados com zero
     u_past = arr_complete(u_past, N_ss)
@@ -124,8 +124,7 @@ def calc_free_foward(y_t, alpha, u_past, window):
         # diferença entre os valores de g
         diff = np.zeros(N_ss) 
         for i in range(N_ss):
-            if j+i < N_ss:
-                diff[i] = g[j+i] - g[i]
+            diff[i] = g[j+i] - g[i]
 
         # soma de todas as diferenças multiplicadas pelos valores passados
         sum = 0
@@ -133,6 +132,9 @@ def calc_free_foward(y_t, alpha, u_past, window):
             sum += diff[i] * u_past[N_ss -i -1]
         
         # calcula o valor predito
-        free_foward[j] = sum + y_t
+        free_foward[j] = sum
+
+    # soma a parcela inicial
+    free_foward += y_t
 
     return free_foward

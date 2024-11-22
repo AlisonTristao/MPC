@@ -2,30 +2,29 @@ import paho.mqtt.client as mqtt
 import time as t
 import ujson
 
-# Classe para conexão com Mosquitto
 class Mosquitto_Connection:
     def __init__(self, topic_send, topic_receive, client_id, port=1883, broker = "localhost"):
-        self.__package          = None              # string json recebida
-        self.__received         = False             # flag de recebimento de pacote
-        self.__broker           = broker            # endereço de onde estao os dados
-        self.__port             = port              # porta de conexão
-        self.__topic_send       = topic_send        # tópico de envio
-        self.__topic_receive    = topic_receive     # tópico de recebimento
-        self.__client_id        = client_id         # id do cliente
-        self.__wait_time        = 0.5               # tempo de espera para recebimento de pacote
-        self.__converter        = JSONConverter()   # conversor de JSON para dicionário
+        self.__package          = None              # string json received
+        self.__received         = False             # flag of received package
+        self.__broker           = broker            # broker address
+        self.__port             = port              # port of broker
+        self.__topic_send       = topic_send        # send topic
+        self.__topic_receive    = topic_receive     # receive topic
+        self.__client_id        = client_id         # id of client
+        self.__wait_time        = 0.5               # timer to wait for package
+        self.__converter        = JSONConverter()   # object to convert json
         
-        # cliente mosquitto 
+        # mosquitto client
         self.__client = mqtt.Client(
                         client_id=self.__client_id, 
                         protocol=mqtt.MQTTv311
                     )
 
-        # metodos de callback para conexão e recebimento de mensagens
+        # callback metods to manipulate the connection
         self.__client.on_connect = self.__on_connect
         self.__client.on_message = self.__on_message
         
-        # conecta ao instanciar a classe
+        # connect to broker and start loop thread
         self.__client.connect(self.__broker, self.__port, 60)
         self.__client.loop_start()
 
@@ -52,7 +51,7 @@ class Mosquitto_Connection:
     
     def __wait_for_package(self):
         timer = t.time()
-        # Aguarda pacote por 0.1 segundos
+        # wait for package
         while not self.__is_received():
             if t.time() - timer > self.__wait_time:
                 print(f"Time to wait for package expired!")
@@ -67,20 +66,19 @@ class Mosquitto_Connection:
             print(f"Error to publish package: {e}")
 
     def send_package(self, **kwargs):
-        # zera os valores do dicionário
+        # clear dictionary
         self.__converter.data = {}
         self.__converter.add_values(**kwargs)
         self.__publish(self.__converter.to_json())
 
     def receive_package(self):
-        # zerar o pacote
         #self.__package = None
         #self.__converter.data = {}
 
-        # Aguarda pacote
+        # Agua
         self.__wait_for_package()
             
-        # Recebe pacote
+        # converter json to dictionary
         if self.__package is not None:
             self.__converter.from_json(self.__package)
 
@@ -112,7 +110,7 @@ class JSONConverter:
     def from_json(self, json_string):
         try:
             self.data = ujson.loads(json_string)
-            # verifica o checksum
+            # verify checksum
             '''if not self.verify_checksum():
                 print("Checksum invalid", self.data)
                 return'''

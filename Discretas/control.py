@@ -2,17 +2,19 @@ from mosquitto_connection import Mosquitto_Connection
 import numpy as np
 
 class Control:
+    # mosquitto connection default values
     _topic_receive  = "plant_simulation"
     _topic_send     = "control_simulation"
     _client_id      = "control"
+
+    # control default values
     _control        =  0.0
-    _value          =  0.0
+    _y              =  0.0
     _reference      =  [0]  
     _saturation     =  100
 
-    def __init__(self):
-        # sera definido nos herdeiros
-        raise NotImplementedError("function not implemented")
+    #def __init__(self):
+        #raise NotImplementedError("function not implemented")
 
     def init_conection(self):
         self._connection = Mosquitto_Connection(
@@ -21,40 +23,43 @@ class Control:
             client_id=self._client_id
         )
         print("Conexão com Mosquitto estabelecida")
-
+    
     def change_topics(self, topic_receive=_topic_receive, topic_send=_topic_send, client_id=_client_id):
         self._topic_receive = topic_receive
         self._topic_send    = topic_send
         self._client_id     = client_id
 
-    def send_signal(self):
-        self._connection.send_package(u=self._control)
+    def send_signal(self, u):
+        self._connection.send_package(u=u)
     
     def receive_signal(self):
         self._connection.receive_package()
         if self._connection.get_value("y") is not None:
-            self._value = self._connection.get_value("y")
+            self._y = self._connection.get_value("y")
 
         if self._connection.get_value("w") is not None:
             self._reference = self._connection.get_value("w")
 
 class PID_simple(Control):
     def __init__(self, kp=1.0, ki=0.0, kd=0.0, sample_time=0.01, saturation=100):   
+        self._sample_time   = sample_time
+        self._saturarion    = saturation
         self._kp            = kp
         self._ki            = ki
         self._kd            = kd
-        self._sample_time   = sample_time
-        self._saturarion    = saturation
         self._integral      = 0.0
         self._derivative    = 0.0
-        self._last_error    = 0.0
+        self._last_y        = 0.0
         self._error         = 0.0
 
-    def calculate_PID(self):
-        # calculate erro
-        self._error = self._reference[0] - self._value
+    def send_signal(self):
+        self._connection.send_package(u=self._control)
 
-        # calculate integral
+    def calculate_PID(self):
+        # calculates error
+        self._error = self._reference[0] - self._y
+
+        # calculates integral
         self._integral += self._error * self._sample_time
 
         # saturate integral
@@ -64,7 +69,7 @@ class PID_simple(Control):
             self._integral = -self._saturation
 
         # calculate derivative
-        self._derivative = (self._error - self._last_error)/self._sample_time
+        self._derivative = (self._y - self._last_y)/self._sample_time
 
         # saturate derivative
         '''if self._derivative > self._saturation/2:
@@ -73,7 +78,7 @@ class PID_simple(Control):
             self._derivative = -self._saturation/2'''
 
         # safe last error
-        self._last_error = self._error
+        self._last_y = self._y
 
         # calculate control
         self._control = self._kp * self._error + self._ki * self._integral + self._kd * self._derivative

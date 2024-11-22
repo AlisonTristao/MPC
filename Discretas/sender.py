@@ -1,26 +1,14 @@
 from mosquitto_connection import Mosquitto_Connection
-import random
+from control import *
 import time
 
-# Cria conexão
-print("Testando conexão com Mosquitto...")
-connection = Mosquitto_Connection(
-    topic_receive   = "cliente_2",
-    topic_send      = "cliente_1",
-    client_id       = "sender"
-)
+controle_pid = PID_simple(kp=3, ki=2, kd=0.0, sample_time=0.1, saturation=100)
 
-# Envia pacote
-counter = 0
+controle_pid.init_conection()
+
 while True:
-    connection.send_package(
-            enviado=counter,
-    )
-
-    # Recebe pacote
-    connection.receive_package()
-    print(connection.get_value("recebido"), counter)
-
+    controle_pid.receive_signal()
+    controle_pid.calculate_PID()
+    controle_pid.send_signal()
+    print(f"y: {controle_pid._value} w: {controle_pid._reference} u: {controle_pid._control}")
     time.sleep(0.1)
-
-    counter += 1

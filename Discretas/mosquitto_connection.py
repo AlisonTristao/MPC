@@ -74,8 +74,8 @@ class Mosquitto_Connection:
 
     def receive_package(self):
         # zerar o pacote
-        self.__package = None
-        self.__converter.data = {}
+        #self.__package = None
+        #self.__converter.data = {}
 
         # Aguarda pacote
         self.__wait_for_package()

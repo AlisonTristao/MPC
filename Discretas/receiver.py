@@ -1,31 +1,14 @@
 from mosquitto_connection import Mosquitto_Connection
-import random
-import time
+from plant import *
 
-# Create a connection to the broker
-connection = Mosquitto_Connection(
-    topic_receive   = "cliente_1",
-    topic_send      = "cliente_2",
-    client_id       = "receiver"
-)
+plant = Plant(alpha=[0.2, 0.3], b=[0.1, 0.2])
 
-# Envia pacote
-counter = 0
+plant.init_conection()
+plant._connection.set_wait_time(0.2)
+
 while True:
-    connection.send_package(
-            recebido=counter
-    )
-
-    # Recebe pacote
-    connection.receive_package()
-    print(connection.get_value("enviado"), counter)
-
-    #time.sleep(0.1)
-
-    counter += 1
-
-    if counter == 100:
-        break
-
-# Close the connection
-connection.close()
+    plant.send_signal(w=[2.0])
+    plant.plant_step_simulation()
+    plant.receive_signal()
+    print(plant.get_y())
+    #time.sleep(1)

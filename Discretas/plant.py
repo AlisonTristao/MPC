@@ -57,8 +57,11 @@ class Plant:
         self.__y = self.__y[1:]
 
     def send_signal(self, w=[0.0]):
-        self.__w = w
+        #self.__w = w
         self.__connection.send_package(y=self.__y[0], w=w)
+
+    def set_w(self, w):
+        self.__w = w
 
     def get_y(self):
         return self.__y[-1]

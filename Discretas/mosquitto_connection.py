@@ -3,7 +3,7 @@ import time
 import ujson
 
 class Mosquitto_Connection:
-    def __init__(self, topic_send, topic_receive, client_id, port=1883, broker="localhost"):
+    def __init__(self, topic_send, topic_receive, client_id, port=1883, broker="test.mosquitto.org"):
         self.__package = None
         self.__received = False
         self.__broker = broker
@@ -11,7 +11,7 @@ class Mosquitto_Connection:
         self.__topic_send = topic_send
         self.__topic_receive = topic_receive
         self.__client_id = client_id
-        self.__wait_time = 0.11
+        self.__wait_time = 2.0
         self.__converter = JSON_Converter()
         self.__client = mqtt.Client(client_id=self.__client_id, protocol=mqtt.MQTTv311)
         self.__client.on_connect = self.__on_connect

@@ -42,7 +42,7 @@ for k in range(N):
     free_foward = calc_free_foward(y[k], alpha, past_u, WINDOW)
 
     # calcula a ação de controle com base na predicao
-    delta_u = solver(alpha, free_foward, w[k:k+WINDOW], LAMBDA=0.1)
+    delta_u = solver(alpha, free_foward, w[k:k+WINDOW], LAMBDA=0.0001)
 
     # atualiza ação de controle
     u[k] = delta_u[0]
@@ -53,6 +53,6 @@ for k in range(N):
     y_hat.append(y_future + free_foward)
     
 print("complete!")
-y =np.concat(([0], calculate_response(LEN_STEP, alpha, u, q) + y0))
+y =np.concat(([], calculate_response(LEN_STEP, alpha, u, q) + y0))
 q = np.concatenate(([0], q))
 animate_system(k_arr, y, u, q, w, N, u_hist, y_hat)

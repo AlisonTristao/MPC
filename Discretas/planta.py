@@ -3,6 +3,7 @@ from mosquitto_connection import *
 from simulation import *
 from plant import *
 
+
 window_size = 50
 config_to_plot = {
         "data_config":{"y": [1],"w": [2],"u": [3],"q": [4]},
@@ -16,19 +17,12 @@ simulation.plant_configurations(alpha=[0.6, 0.3], beta=[0.1], gama=[0.1], satura
 
 w = 50  
 q = 0
-step_count_ref = 0 
-step_count_q = 0
 
 while True:
-    step_count_ref += 1
-    step_count_q += 1
+    if random.randint(0, 1000) < 50:
+        w = int(random.uniform(-50, 50))
+ 
+    if random.randint(0, 1000) < 10:
+        q = int(random.uniform(-50, 50))
 
-    if step_count_ref == 60:
-        step_count_ref = 0
-        w = int(random.uniform(-100, 100)) 
-
-    if step_count_q == 120:
-        step_count_q = 0
-        q = int(random.uniform(-25, 25))
-
-    simulation.step(w, q, horizon=5)
+    simulation.step(w, q, noise=0.01)

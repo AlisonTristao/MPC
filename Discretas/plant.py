@@ -2,8 +2,8 @@ from mosquitto_connection import Mosquitto_Connection
 import random
 
 class Plant:
-    _topic_receive = "control_simulation"
-    _topic_send = "plant_simulation"
+    _topic_receive = "control_simulation/u"
+    _topic_send = "plant_simulation/y"
     _client_id = "plant"
 
     def __init__(self, alpha=[0.9], beta=[1], gama=[1], saturation=100):
@@ -13,7 +13,6 @@ class Plant:
         self.__y = [0 for _ in range(len(alpha))]
         self.__u = [0 for _ in range(len(beta))]
         self.__q = [0 for _ in range(len(gama))]
-        self.__w = [0]
         self.__saturation = saturation
 
     def init_connection(self):
@@ -56,9 +55,8 @@ class Plant:
         self.__y.append(y)
         self.__y = self.__y[1:]
 
-    def send_signal(self, w=[0.0]):
-        #self.__w = w
-        self.__connection.send_package(y=self.__y[0], w=w)
+    def send_signal(self, w=[0.0], q=[0.0]):
+        self.__connection.send_package(y=self.__y[0], w=w, q=q)
 
     def set_w(self, w):
         self.__w = w
@@ -68,9 +66,6 @@ class Plant:
 
     def get_u(self):
         return self.__u[-1]
-
-    def get_w(self):
-        return self.__w[-1]
     
     def get_q(self):
         return self.__q[-1]
@@ -78,9 +73,7 @@ class Plant:
     def get_data(self):
         data = {
             'y': self.get_y(),
-            'w': self.get_w(),
-            'u': self.get_u(),
-            'q': self.get_q()
+            'u': self.get_u()
         }
 
         return data

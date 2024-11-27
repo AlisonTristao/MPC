@@ -1,8 +1,8 @@
 from mosquitto_connection import Mosquitto_Connection
 
 class Control:
-    _topic_receive = "plant_simulation"
-    _topic_send = "control_simulation"
+    _topic_receive = "plant_simulation/y"
+    _topic_send = "control_simulation/u"
     _client_id = "control"
     _control = 0.0
     _saturation = 100
@@ -43,6 +43,7 @@ class PID_Simple(Control):
         self._derivative = 0.0
         self._last_y = 0.0
         self._error = 0.0
+        self._previous_control = 0.0
 
     def send_signal(self):
         self._connection.send_package(u=self._control)
@@ -50,11 +51,15 @@ class PID_Simple(Control):
     def calculate_PID(self):
         self._error = self._reference[0] - self._y
         self._integral += self._error * self._sample_time
-        self._integral = max(min(self._integral, self._saturation), -self._saturation)
+
+        unsaturated_control = self._kp * self._error + self._ki * self._integral + self._kd * self._derivative
+        self._control = max(min(unsaturated_control, self._saturation), -self._saturation)
+
+        if self._control != unsaturated_control:
+            self._integral -= self._error * self._sample_time
+
         self._derivative = (self._y - self._last_y) / self._sample_time
         self._last_y = self._y
-        self._control = self._kp * self._error + self._ki * self._integral + self._kd * self._derivative
-        self._control = max(min(self._control, self._saturation), -self._saturation)
 
 class PID_With_Future_Reference(PID_Simple):
     def __moving_average(self, future_reference, n):

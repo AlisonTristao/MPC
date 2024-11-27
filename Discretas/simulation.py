@@ -97,22 +97,24 @@ class Simulation:
 
         plt.pause(1e-6)
 
-    def step(self, w, q, horizon=1):
+    def step(self, w=0, q=0, noise=0.0, w_horizon=1, q_horizon=0):
         # recebe o sinal de controle
         self.__plant.receive_signal()
 
         # atualiza a simulação do sistema
-        self.__plant.step_simulation(q=q)
+        self.__plant.step_simulation(q=self.y_data["q"][self.window_size["y"] - 1], noise=noise)
 
-        # atualiza a referência futura
-        self.__plant.set_w([w])
+        # atualiza a ref e a perturbacao
+        self.update_data({"q": q})
+        self.update_data({"w": w})
 
         # atualiza os dados 
         self.update_data(self.__plant.get_data())
 
-        # envia o sinal de referência
-        w_send = [self.y_data["w"][self.window_size["y"] +i -1] for i in range(horizon)]
-        self.__plant.send_signal(w=w_send)
+        # envia o sinal de referência e y
+        w_future_win = [self.y_data["w"][self.window_size["y"] +i -1] for i in range(w_horizon)]
+        q_future_win = [self.y_data["q"][self.window_size["y"] +i -1] for i in range(q_horizon)]
+        self.__plant.send_signal(w=w_future_win, q=q_future_win)
 
         # atualiza o gráfico (enquanto o outro cara calcula o controle)
         self.update_plot()

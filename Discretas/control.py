@@ -48,7 +48,7 @@ class PID_Simple(Control):
     def send_signal(self):
         self._connection.send_package(u=self._control)
 
-    def calculate_PID(self):
+    def calculate_u(self):
         self._error = self._reference[0] - self._y
         self._integral += self._error * self._sample_time
 
@@ -63,9 +63,11 @@ class PID_Simple(Control):
 
 class PID_With_Future_Reference(PID_Simple):
     def __moving_average(self, future_reference, n):
+        if len(future_reference) < n:
+            print("Not enough future reference values.")
         return sum(future_reference[:n]) / n
 
-    def calculate_PID_with_future_reference(self, future_reference_arr, horizon=1):
-        filtered_ref = self.__moving_average(future_reference_arr, horizon)
-        self._reference = filtered_ref
-        self.calculate_PID()
+    def calculate_u(self, horizon=1):
+        filtered_ref = self.__moving_average(self._reference, horizon)
+        self._reference[0] = filtered_ref
+        super().calculate_u()

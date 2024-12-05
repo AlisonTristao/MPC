@@ -25,4 +25,4 @@ while True:
     if random.randint(0, 1000) < 10:
         q = int(random.uniform(-50, 50))
 
-    simulation.step(w, q, noise=0.01)
+    simulation.step(w, q, noise=0.01, w_horizon=10)

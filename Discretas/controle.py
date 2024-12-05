@@ -10,6 +10,6 @@ SAMPLE_TIME = 0.1
 while True:
     start = time.time()
     controle.receive_signal()
-    controle.calculate_PID()
+    controle.calculate_u()
     controle.send_signal()
     time.sleep(max(0, SAMPLE_TIME - (time.time() - start)))

@@ -92,9 +92,9 @@ class Simulation:
             line.set_xdata(self.__x_data[name])
             line.set_ydata(self.__y_data[name])
 
-        # ajusta os limites dos gráficos
-        #self.ax1.set_xlim(self.x_data[0], self.x_data[0] + 2 * self.window_size * self.sample_time)
-        #self.ax2.set_xlim(self.x_data[0], self.x_data[0] + 2 * self.window_size * self.sample_time)
+        # adiciona uma linha vertical para indicar o tempo atual
+        self.__ax1.axvline(x=self.__x_data["y"][-1], color="gray", linestyle="--")
+        self.__ax2.axvline(x=self.__x_data["y"][-1], color="gray", linestyle="--")
 
         plt.pause(1e-6)
 

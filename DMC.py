@@ -28,6 +28,10 @@ w       = step_generator(LEN_STEP, STEPS_T, STEPS_W)
 u_hist  = []
 y_hat   = []
 
+G = matrix_G(WINDOW, alpha)
+K = np.linalg.inv(G.T @ G + 0.1 * np.eye(WINDOW)) @ G.T
+K1 = K[0, :]
+
 for k in range(N):
     # calcula a saída do sistema
     y = calculate_response(N, alpha, u, q) + y0 + noise
@@ -42,10 +46,10 @@ for k in range(N):
     free_foward = calc_free_foward(y[k], alpha, past_u, WINDOW)
 
     # calcula a ação de controle com base na predicao
-    delta_u = solver(alpha, free_foward, w[k:k+WINDOW], LAMBDA=0.0001)
+    delta_u = K1 @ (w[k:k+WINDOW] - free_foward) #solver(alpha, free_foward, w[k:k+WINDOW], LAMBDA=0.1)
 
     # atualiza ação de controle
-    u[k] = delta_u[0]
+    u[k] = delta_u
 
     # salva a predição para plotar
     y_future = calculate_response(WINDOW, alpha, delta_u, [])
@@ -55,4 +59,4 @@ for k in range(N):
 print("complete!")
 y =np.concat(([], calculate_response(LEN_STEP, alpha, u, q) + y0))
 q = np.concatenate(([0], q))
-animate_system(k_arr, y, u, q, w, N, u_hist, y_hat)
+animate_system(k_arr, y, u, q, w, N, [], y_hat)

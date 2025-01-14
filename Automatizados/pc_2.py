@@ -15,7 +15,7 @@ config_to_plot = {
 simulation = Simulation(config_to_plot)
 simulation.plant_configurations(alpha=[0.6, 0.3], beta=[0.1], gama=[0.1], saturation=100)
 
-w = 50  
+w = 50
 q = 0
 
 while True:

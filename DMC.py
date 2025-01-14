@@ -17,7 +17,7 @@ noise   = np.zeros(N)#np.random.normal(0, 0.0, N)
 # perturbação
 STEPS_Q = [1, 0, 1, 0, 1, 0, -1, 0, -1, 0, 2, 0]
 STEPS_T = [10, 11, 20, 21, 30, 31, 40, 41, 50, 51, 60, 61]
-q       = step_generator(LEN_STEP, STEPS_T, STEPS_Q)
+q       = step_generator(LEN_STEP, STEPS_T, STEPS_Q) * 3
 
 # referência
 STEPS_W = [1, 3, -2, 1, -4, 5]
@@ -42,14 +42,24 @@ for k in range(N):
     # define o vetor de controle passado
     past_u = u[past_time:k].copy()
 
+    # perturbação passada 
+    past_q = q[past_time:k].copy()
+
     # free response (ele completa os valores passado de u com zero)
-    free_foward = calc_free_foward(y[k], alpha, past_u, WINDOW)
+    free_foward_u = calc_free_foward(y[k], alpha, past_u, WINDOW)
+
+    # free forward com perturbação 
+    free_foward_q = calc_free_foward(0, alpha, past_q, WINDOW)
+
+    free_foward = free_foward_u + free_foward_q
+
+    # perturbacao futura 
+    free_foward += G @ q[k:k+WINDOW] 
 
     # calcula a ação de controle com base na predicao
-    delta_u = K1 @ (w[k:k+WINDOW] - free_foward) #solver(alpha, free_foward, w[k:k+WINDOW], LAMBDA=0.1)
-
+    delta_u = K @ (w[k:k+WINDOW] - free_foward) #solver(alpha, free_foward, w[k:k+WINDOW], LAMBDA=0.1)
     # atualiza ação de controle
-    u[k] = delta_u
+    u[k] = delta_u[0]
 
     # salva a predição para plotar
     y_future = calculate_response(WINDOW, alpha, delta_u, [])
@@ -59,4 +69,4 @@ for k in range(N):
 print("complete!")
 y =np.concat(([], calculate_response(LEN_STEP, alpha, u, q) + y0))
 q = np.concatenate(([0], q))
-animate_system(k_arr, y, u, q, w, N, [], y_hat)
+animate_system(k_arr, y, u, q, w, N, u_hist, y_hat)

@@ -24,7 +24,8 @@ u_hist  = []
 y_hat   = []
 
 G = matrix_G(WINDOW, alpha)
-K = np.linalg.inv(G.T @ G + 0.01 * np.eye(WINDOW)) @ G.T
+LAMBDA = 0.01
+K = np.linalg.inv(G.T @ G + LAMBDA * np.eye(WINDOW)) @ G.T
 K1 = K[0, :]
 
 for k in range(N):

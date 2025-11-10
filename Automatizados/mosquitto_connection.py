@@ -3,7 +3,8 @@ import time
 import ujson
 
 class Mosquitto_Connection:
-    def __init__(self, topic_send, topic_receive, client_id, port=1883, broker="localhost"): #broker="test.mosquitto.org"):
+    def __init__(self, topic_send, topic_receive, client_id, port=1883): #broker="test.mosquitto.org"):
+        broker="localhost"
         self.__package = None
         self.__received = False
         self.__broker = broker

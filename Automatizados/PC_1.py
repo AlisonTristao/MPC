@@ -5,7 +5,7 @@ import time
 controle = PID_With_Future_Reference(kp=2, ki=2, kd=0.01)
 controle.init_connection()
 
-SAMPLE_TIME = 0.1
+SAMPLE_TIME = 1
 
 while True:
     start = time.time()

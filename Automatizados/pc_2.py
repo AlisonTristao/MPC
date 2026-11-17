@@ -4,12 +4,12 @@ from simulation import *
 from plant import *
 
 
-window_size = 50
+window_size = 10
 config_to_plot = {
-        "data_config":{"y": [1],"w": [2],"u": [3],"q": [4]},
-        "data_colors":{"y": "orange","w": "purple","u": "green","q": "black"},   
-        "data_style":{"y": "-","w": "--","u": "-","q": "--"},
-        "data_win":{"y": window_size,"w": int(2 * window_size),"u": window_size,"q": 2*window_size}
+        "data_config":{"y": [1],"u": [2]},
+        "data_colors":{"y": "orange","u": "green"},   
+        "data_style":{"y": "-","u": "-"},
+        "data_win":{"y": window_size,"u": window_size}
 }
 
 simulation = Simulation(config_to_plot)

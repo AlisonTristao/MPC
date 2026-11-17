@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+from fast_pyplot import patch_pyplot
+patch_pyplot(plt)
 from plant import Plant
 import numpy as np
 
@@ -96,26 +98,26 @@ class Simulation:
         self.__ax1.axvline(x=self.__x_data["y"][-1], color="gray", linestyle="--")
         self.__ax2.axvline(x=self.__x_data["y"][-1], color="gray", linestyle="--")
 
-        plt.pause(1e-6)
+        #plt.pause(1e-6)
 
     def step(self, w=0, q=0, noise=0.0, w_horizon=1, q_horizon=0):
         # recebe o sinal de controle
         self.__plant.receive_signal()
 
         # atualiza a simulação do sistema
-        self.__plant.step_simulation(q=self.__y_data["q"][self.__window_size["y"] - 1], noise=noise)
+        self.__plant.step_simulation()
 
         # atualiza a ref e a perturbacao
-        self.update_data({"q": q})
-        self.update_data({"w": w})
+        #self.update_data({"q": q})
+        #self.update_data({"w": w})
 
         # atualiza os dados 
         self.update_data(self.__plant.get_data())
 
         # envia o sinal de referência e y
-        w_future_win = [self.__y_data["w"][self.__window_size["y"] +i -1] for i in range(w_horizon)]
-        q_future_win = [self.__y_data["q"][self.__window_size["y"] +i -1] for i in range(q_horizon)]
-        self.__plant.send_signal(w=w_future_win, q=q_future_win)
+        #w_future_win = [self.__y_data["w"][self.__window_size["y"] +i -1] for i in range(w_horizon)]
+        #q_future_win = [self.__y_data["q"][self.__window_size["y"] +i -1] for i in range(q_horizon)]
+        self.__plant.send_signal()
 
         # atualiza o gráfico (enquanto o outro cara calcula o controle)
         self.update_plot()

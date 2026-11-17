@@ -53,4 +53,5 @@ for k in range(N):
     
 print("complete!")
 y = np.concatenate(([], calculate_response(LEN_STEP, alpha, u, []) + y0))
+
 animate_system(k_arr, y, u, np.zeros(LEN_STEP), w, N, u_hist, y_hat)

@@ -29,8 +29,8 @@ class Control:
         self._connection.receive_package()
         if self._connection.get_value("y") is not None:
             self._y = self._connection.get_value("y")
-        if self._connection.get_value("w") is not None:
-            self._reference = self._connection.get_value("w")
+        #if self._connection.get_value("w") is not None:
+        #    self._reference = self._connection.get_value("w")
 
 class PID_Simple(Control):
     def __init__(self, kp=1.0, ki=0.0, kd=0.0, sample_time=0.1, saturation=100):
@@ -46,7 +46,7 @@ class PID_Simple(Control):
         self._previous_control = 0.0
 
     def send_signal(self):
-        self._connection.send_package(u=self._control)
+        self._connection.send_package(u=2)
 
     def calculate_u(self):
         self._error = self._reference[0] - self._y
@@ -68,6 +68,7 @@ class PID_With_Future_Reference(PID_Simple):
         return sum(future_reference[:n]) / n
 
     def calculate_u(self, horizon=10):
-        filtered_ref = self.__moving_average(self._reference, horizon)
-        self._reference[0] = filtered_ref
-        super().calculate_u()
+        #filtered_ref = self.__moving_average(self._reference, horizon)
+        #self._reference[0] = filtered_ref
+        #super().calculate_u()
+        pass
